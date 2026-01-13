@@ -29,12 +29,34 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
+      - name: Project Setup
+        run: 
+          npm run setup
+          npm run dev:daemon
 
       - name: Run Claude Code
         id: claude
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          custom_instructions: |
+            The project is already set up with all dependencies installed.
+            The server is already running at localhost:5173. Logs from it are being written to logs.txt. If needed, use the mcp_playwright set of tools to launch a browser instance and interact with the app.
+          mcp_config: |
+            {
+              "mcpServers": {
+                "playwright": {
+                  "command": "bunx",
+                  "args": [
+                    "@playwright/mcp@latest",
+                    "--allowed-origins",
+                    "localhost:5173, cdn.tailwindcss.com;em.sh"
+                  ]
+                }
+              }
+            }
+          
+          allowed_tools: "Bash(bun:*),mcp_playwright_browser_snapshot,mcp_playwright_browser_click,mcp_playwright_browser_clipboard_read,mcp_playwright_browser_clipboard_write"
 
           # This is an optional setting that allows Claude to read CI results on PRs
           additional_permissions: |
